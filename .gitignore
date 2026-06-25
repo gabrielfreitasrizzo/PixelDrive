@@ -1,0 +1,22 @@
+# Sistema e IDEs
+.DS_Store
+.vscode/
+.idea/
+
+# Pastas de ambiente virtual
+backend/venv/
+backend/.venv/
+
+# Python - Arquivos compilados e cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Variáveis de ambiente
+.env
+
+# Pastas de dependências de front
+frontend/node_modules/
+frontend/dist/
+frontend/build/
