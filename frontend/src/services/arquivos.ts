@@ -49,3 +49,7 @@ export async function fazerDownload(id: number, nomeArquivo: string): Promise<vo
     link.parentNode?.removeChild(link);
     window.URL.revokeObjectURL(url);
 }
+
+export async function deletarArquivo(id: number): Promise<void> {
+    await api.delete(`/arquivos/${id}/`);
+}

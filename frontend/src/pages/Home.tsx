@@ -1,6 +1,6 @@
 import { useEffect, useState, type ChangeEvent, type SubmitEvent } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { listarArquivos, fazerUpload, fazerDownload, type Arquivo } from "../services/arquivos";
+import { listarArquivos, fazerUpload, fazerDownload, deletarArquivo, type Arquivo } from "../services/arquivos";
 
 function formatarTamanho(bytes: number) {
     if (bytes === 0) return "0 Bytes";
@@ -95,7 +95,17 @@ export function Home() {
             setError("Falha no download do arquivo.");
         }
     }
-    
+
+    async function handleDelete(id: number) {
+        if (window.confirm("Tem certeza que deseja deletar este arquivo?"))
+            try {
+                await deletarArquivo(id);
+                await carregarArquivos();
+            } catch (err) {
+                setError("Falha ao deletar o arquivo.");
+            }
+    }
+            
     if (isLoading) return <p>Carregando arquivos...</p>;
 
     return (
@@ -151,6 +161,9 @@ export function Home() {
                                 <td>{formatarData(arq.data_upload)}</td>
                                 <td>
                                     <button onClick={() => handleDownload(arq.id, arq.nome)}>Download</button>
+                                    <button onClick={() => handleDelete(arq.id)} style={{ marginLeft: '10px' }}>
+                                        Deletar
+                                    </button>
                                 </td>
                             </tr>
                         ))}
