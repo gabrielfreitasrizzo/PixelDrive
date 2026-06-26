@@ -1,6 +1,8 @@
 import mimetypes
 from django.shortcuts import render
+from django.http import FileResponse
 from rest_framework import generics, permissions, viewsets
+from rest_framework.decorators import action
 from django.contrib.auth.models import User
 from .models import Arquivo
 from .serializers import RegistroSerializer, ArquivoSerializer
@@ -32,3 +34,15 @@ class ArquivoViewSet(viewsets.ModelViewSet):
             tamanho=tamanho,
             mime_type=mime_type if mime_type else 'application/octet-stream'
         )
+
+    @action(detail=True, methods=['get'])
+    def download(self, request, pk=None):
+        arquivo = self.get_object()
+        
+        response = FileResponse(
+            arquivo.arquivo.open('rb'),
+            as_attachment=True,
+            filename=arquivo.nome, 
+            content_type=arquivo.mime_type
+        )
+        return response
