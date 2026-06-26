@@ -6,6 +6,7 @@
 # Pastas de ambiente virtual
 backend/venv/
 backend/.venv/
+backend/media/
 
 # Python - Arquivos compilados e cache
 __pycache__/
