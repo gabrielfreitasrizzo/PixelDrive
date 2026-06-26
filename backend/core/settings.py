@@ -36,7 +36,8 @@ INSTALLED_APPS = [
     'gestao_arquivos',
     'rest_framework',
     'rest_framework_simplejwt',
-    'corsheaders'
+    'corsheaders',
+    'django_cleanup.apps.CleanupConfig',
 ]
 
 MIDDLEWARE = [

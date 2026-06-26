@@ -1,3 +1,4 @@
+import os
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import Arquivo
@@ -22,3 +23,18 @@ class ArquivoSerializer(serializers.ModelSerializer):
         fields = ['id', 'usuario', 'nome', 'chave', 'mime_type', 
                   'tamanho', 'data_upload', 'arquivo']
         read_only_fields = ('usuario', 'chave', 'data_upload', 'nome', 'mime_type', 'tamanho')
+
+    def validate_arquivo(self, value):
+        limite_bytes = 10 * 1024 * 1024  # 10 MB
+        if value.size > limite_bytes:
+            raise serializers.ValidationError("O arquivo é muito grande. O limite máximo é 10MB.")
+        
+        extensoes_validas = ['.png', '.jpg', '.pdf', '.txt']
+        extensao_arquivo = os.path.splitext(value.name)[1].lower()
+
+        if extensao_arquivo not in extensoes_validas:
+            raise serializers.ValidationError(
+                f"Formato inválido. Tipos permitidos: {', '.join(extensoes_validas)}"
+            )
+        
+        return value
