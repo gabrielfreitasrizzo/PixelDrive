@@ -33,3 +33,19 @@ export async function fazerUpload(
     
     return response.data;
 }
+
+export async function fazerDownload(id: number, nomeArquivo: string): Promise<void> {
+    const response = await api.get(`/arquivos/${id}/download/`, {
+        responseType: "blob",
+    });
+
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", nomeArquivo);
+    document.body.appendChild(link);
+    link.click();
+    
+    link.parentNode?.removeChild(link);
+    window.URL.revokeObjectURL(url);
+}

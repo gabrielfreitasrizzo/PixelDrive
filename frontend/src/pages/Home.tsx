@@ -1,6 +1,6 @@
 import { useEffect, useState, type ChangeEvent, type SubmitEvent } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { listarArquivos, fazerUpload, type Arquivo } from "../services/arquivos";
+import { listarArquivos, fazerUpload, fazerDownload, type Arquivo } from "../services/arquivos";
 
 function formatarTamanho(bytes: number) {
     if (bytes === 0) return "0 Bytes";
@@ -87,6 +87,14 @@ export function Home() {
             setUploadProgress(null);
         }
     }
+
+    async function handleDownload(id: number, nome: string) {
+        try {
+            await fazerDownload(id, nome);
+        } catch (err) {
+            setError("Falha no download do arquivo.");
+        }
+    }
     
     if (isLoading) return <p>Carregando arquivos...</p>;
 
@@ -132,6 +140,7 @@ export function Home() {
                             <th style={{ padding: '10px 0' }}>Nome</th>
                             <th>Tamanho</th>
                             <th>Data de Upload</th>
+                            <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -140,6 +149,9 @@ export function Home() {
                                 <td style={{ padding: '10px 0' }}>{arq.nome}</td>
                                 <td>{formatarTamanho(arq.tamanho)}</td>
                                 <td>{formatarData(arq.data_upload)}</td>
+                                <td>
+                                    <button onClick={() => handleDownload(arq.id, arq.nome)}>Download</button>
+                                </td>
                             </tr>
                         ))}
                     </tbody>
