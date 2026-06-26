@@ -15,6 +15,7 @@ class Arquivo(models.Model):
     mime_type = models.CharField(max_length=100, help_text="Tipo do arquivo (png, jpg, pdf ou txt)")
     tamanho = models.BigIntegerField(help_text="Tamanho do arquivo em bytes")
     data_upload = models.DateTimeField(auto_now_add=True)
+    arquivo = models.FileField(upload_to='uploads/')
 
     def __str__(self):
         return f"{self.nome} ({self.usuario.username})"
