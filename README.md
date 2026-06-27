@@ -109,14 +109,15 @@ Nenhuma alteração de código é necessária para alternar entre os dois — ap
 - [x] Isolamento de acesso entre usuários
 - [x] Armazenamento local ou S3 (bônus)
 - [x] Execução completa via Docker Compose, com banco de dados persistido em volume
+- [x] Deploy em produção integrando Vercerl + Render + Supabase + AWS S3
 
 ## Funcionalidades não implementadas
 
-- [ ] **Testes automatizados** — optei por priorizar a robustez e o polimento das funcionalidades obrigatórias e do bônus de storage dentro do tempo disponível. A segurança de acesso (isolamento entre usuários) foi validada manualmente via requisições à API durante o desenvolvimento.
-- [ ] **Links de download com expiração** — não implementado; o controle de acesso ao download é feito via autenticação JWT a cada requisição, em vez de URLs assinadas com tempo de vida próprio.
-- [ ] **Preview de imagens** — não implementado.
-- [ ] **Versionamento de arquivos** — avaliei essa funcionalidade, mas decidi não implementá-la: exigiria uma modificação maior no modelo de dados (suportar múltiplas versões por arquivo lógico) e não me pareceu uma decisão de complexidade compatível com o tempo disponível para um teste de nível júnior.
-- [ ] **Cache** — não implementado.
+- [ ] **Upload com Streaming**
+- [ ] **Links de download com expiração** 
+- [ ] **Preview de imagens** 
+- [ ] **Versionamento de arquivos** 
+- [ ] **Cache** 
 
 ## Uso de IA
 
@@ -125,11 +126,11 @@ Utilizei o Claude (Anthropic) como apoio durante o desenvolvimento, principalmen
 - Discussão de decisões de arquitetura (ex: storage local vs. S3, considerando o plano de deploy em Render/Vercel/Supabase)
 - Diagnóstico de erros de configuração do Docker (permissões, variáveis de ambiente, WhiteNoise)
 
-Todas as decisões técnicas foram compreendidas e validadas por mim antes de serem aplicadas ao projeto.
+Todas as decisões técnicas foram compreendidas e validadas individualmente por mim antes de serem aplicadas ao projeto.
 
 ## Deploy
 
-- Frontend: [Vercel] (link a definir)
-- Backend: [Render] (link a definir)
-- Banco de dados: [Supabase] (link a definir)
+- Frontend: [Vercel](https://pixel-drive.vercel.app/)
+- Backend: [Render](https://pixeldrive.onrender.com/admin/)
+- Banco de dados: Supabase
 - Storage: AWS S3

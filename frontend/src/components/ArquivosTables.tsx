@@ -7,6 +7,7 @@ interface ArquivosTableProps {
     onDelete: (id: number) => void;
     formatarTamanho: (bytes: number) => string;
     formatarData: (dataIso: string) => string;
+    isLoading: boolean;
 }
 
 export function ArquivosTable({
@@ -15,10 +16,13 @@ export function ArquivosTable({
     onDelete,
     formatarTamanho,
     formatarData,
+    isLoading,
 }: ArquivosTableProps) {
     if (arquivos.length === 0) {
         return <p>Nenhum arquivo encontrado.</p>;
     }
+
+    if (isLoading) return <p>Carregando arquivos...</p>;
 
     return (
         <table className="files-table">

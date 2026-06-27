@@ -68,6 +68,7 @@ export function Home() {
         const limite_bytes = 10 * 1024 * 1024;
         if (arquivoSelecionado.size > limite_bytes) {
             setUploadError("O arquivo excede o tamanho máximo de 10MB.");
+            setArquivoSelecionado(null);
             return;
         }
 
@@ -75,6 +76,7 @@ export function Home() {
         const extensao = arquivoSelecionado.name.substring(arquivoSelecionado.name.lastIndexOf(".")).toLowerCase();
         if (!extensoesPermitidas.includes(extensao)) {
             setUploadError("Tipo de arquivo não permitido. Use .jpg, .png, .pdf ou .txt.");
+            setArquivoSelecionado(null);
             return;
         }
         
@@ -131,8 +133,6 @@ export function Home() {
         }
     }   
             
-    if (isLoading) return <p>Carregando arquivos...</p>;
-
     return (
         <div className="home-container">
             <div className="home-header">
@@ -157,6 +157,7 @@ export function Home() {
                 onDelete={openDeleteModal}
                 formatarTamanho={formatarTamanho}
                 formatarData={formatarData}
+                isLoading={isLoading}
             />
 
             {isDeleteModalOpen && (
