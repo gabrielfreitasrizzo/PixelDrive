@@ -61,7 +61,7 @@ PixelDrive/
 ├── frontend/               → React + TypeScript (Vite)
 │   └── src/
 │       ├── pages/          → telas (Login, Cadastro, Home)
-│       ├── components/     → componentes reutilizáveis (Header, ProtectedRoute)
+│       ├── components/     → componentes reutilizáveis (Header, ProtectedRoute, Modal,AlertBanner, UploadForm, ArquivosTable)
 │       ├── contexts/       → contexto de autenticação
 │       └── services/       → comunicação com a API (auth, arquivos)
 └── docker-compose.yml      → orquestração dos serviços (backend, frontend, banco)
@@ -78,6 +78,8 @@ A comunicação entre frontend e backend é feita via API REST (JSON), com auten
 - **Storage local ou S3 (configuração automática):** o backend decide qual storage usar com base na presença das variáveis de ambiente `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` e `AWS_STORAGE_BUCKET_NAME`. Se todas estiverem definidas, o S3 é usado; caso contrário, o sistema usa o filesystem local, sem nenhuma mudança de código necessária — apenas o `settings.py` decide isso dinamicamente. Essa decisão veio da necessidade real de deploy (ver seção [Deploy](#deploy)), onde plataformas como o Render não oferecem disco persistente, mas foi desenhada para não exigir credenciais AWS para rodar localmente via Docker.
 
 - **Estáticos do admin via WhiteNoise:** como o backend roda com `gunicorn` (servidor de produção) em vez do `runserver` de desenvolvimento, os arquivos estáticos do Django Admin não são servidos automaticamente. Optei pelo `whitenoise` em vez de configurar um servidor separado (nginx) só para isso, por ser mais simples de manter dentro de um único container.
+
+- **Login por e-mail, sem alterar o modelo de usuário:** o edital pede autenticação por e-mail e senha, mas optei por manter o modelo `User` padrão do Django em vez de criar um modelo customizado (o que exigiria uma migração mais invasiva). A solução adotada foi sincronizar `username` e `email` no momento do cadastro — o usuário sempre informa apenas o e-mail, que é salvo automaticamente também como `username`. Isso aproveita a constraint de unicidade já existente em `username` para garantir que e-mails não se repitam, sem precisar de validação redundante.
 
 - **Criação automática de superusuário no Docker:** o `Dockerfile` do backend roda `createsuperuser --noinput` na inicialização, usando variáveis de ambiente (`DJANGO_SUPERUSER_*`). Isso evita que quem for avaliar o projeto precise executar um comando manual extra dentro do container só para acessar o admin.
 
@@ -96,8 +98,9 @@ Nenhuma alteração de código é necessária para alternar entre os dois — ap
 
 ## Funcionalidades implementadas
 
-- [x] Cadastro e login com autenticação JWT
+- [x] Cadastro e login com autenticação JWT (por e-mail e senha)
 - [x] Sessão persistente (token salvo no `localStorage`)
+- [x] Feedback visual de sucesso e erro em cadastro, login, upload e exclusão de arquivos
 - [x] Upload de arquivos (.png, .jpg, .pdf, .txt — máx. 10MB), com validação client-side e server-side
 - [x] Feedback de progresso de upload
 - [x] Listagem de arquivos (nome, tamanho, data)

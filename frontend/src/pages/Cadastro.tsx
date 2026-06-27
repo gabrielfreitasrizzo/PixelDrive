@@ -1,6 +1,7 @@
 import { useState, type SubmitEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { cadastro } from "../services/auth";
+import { AlertBanner } from "../components/AlertBanner";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -11,13 +12,13 @@ export function Cadastro() {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
-    
+
     const navigate = useNavigate();
-    
+
     const handleSubmit = async (e: SubmitEvent) => {
         e.preventDefault();
         setError("");
-        
+
         if (!firstName.trim()) {
             setError("O campo Nome é obrigatório.");
             return;
@@ -34,17 +35,18 @@ export function Cadastro() {
             setError("O campo Senha é obrigatório.");
             return;
         }
+
         setIsLoading(true);
-        
+
         try {
-            await cadastro({ 
-                first_name: firstName.trim(), 
-                last_name: lastName.trim(), 
-                email: email.trim(), 
-                password 
+            await cadastro({
+                first_name: firstName.trim(),
+                last_name: lastName.trim(),
+                email: email.trim(),
+                password,
             });
             navigate("/login", {
-                state: { message: "Cadastro realizado com sucesso! Faça login para continuar." }
+                state: { message: "Cadastro realizado com sucesso! Faça login para continuar." },
             });
         } catch (err: any) {
             const msg = err.response?.data?.email?.[0];
@@ -53,58 +55,54 @@ export function Cadastro() {
             setIsLoading(false);
         }
     };
-    
-    return (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: 'var(--bg-color)' }}>
-            <div style={{ width: '100%', maxWidth: '400px', padding: '40px', backgroundColor: '#fff', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 6px rgba(0,0,0,0.15)' }}>
-                <h2 style={{ textAlign: 'center', marginBottom: '24px', color: 'var(--text-primary)' }}>Crie a sua conta</h2>
-                
-                {error && (
-                    <div style={{ marginBottom: '20px', padding: '10px', backgroundColor: '#FEE2E2', color: '#991B1B', borderRadius: 'var(--border-radius)', border: '1px solid #F87171', fontSize: '14px' }}>
-                        {error}
-                    </div>
-                )}
 
-                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    <input 
-                        type="text" 
-                        placeholder="Nome" 
-                        value={firstName} 
-                        onChange={(e) => setFirstName(e.target.value)} 
+    return (
+        <div className="auth-page">
+            <div className="auth-card">
+                <h2 className="auth-title">Crie a sua conta</h2>
+
+                {error && <AlertBanner type="error" message={error} />}
+
+                <form onSubmit={handleSubmit} className="auth-form">
+                    <input
+                        type="text"
+                        placeholder="Nome"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
                         disabled={isLoading}
-                        style={{ padding: '12px', borderRadius: 'var(--border-radius)', border: '1px solid var(--border-color)', outline: 'none' }}
+                        className="input-field"
                     />
-                    <input 
-                        type="text" 
-                        placeholder="Sobrenome (opcional)" 
-                        value={lastName} 
-                        onChange={(e) => setLastName(e.target.value)} 
+                    <input
+                        type="text"
+                        placeholder="Sobrenome (opcional)"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
                         disabled={isLoading}
-                        style={{ padding: '12px', borderRadius: 'var(--border-radius)', border: '1px solid var(--border-color)', outline: 'none' }}
+                        className="input-field"
                     />
-                    <input 
-                        type="text" 
-                        placeholder="E-mail" 
-                        value={email} 
-                        onChange={(e) => setEmail(e.target.value)} 
+                    <input
+                        type="text"
+                        placeholder="E-mail"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
                         disabled={isLoading}
-                        style={{ padding: '12px', borderRadius: 'var(--border-radius)', border: '1px solid var(--border-color)', outline: 'none' }}
+                        className="input-field"
                     />
-                    <input 
-                        type="password" 
-                        placeholder="Senha" 
-                        value={password} 
-                        onChange={(e) => setPassword(e.target.value)} 
+                    <input
+                        type="password"
+                        placeholder="Senha"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
                         disabled={isLoading}
-                        style={{ padding: '12px', borderRadius: 'var(--border-radius)', border: '1px solid var(--border-color)', outline: 'none' }}
+                        className="input-field"
                     />
-                    <button type="submit" disabled={isLoading} style={{ padding: '12px', marginTop: '8px' }}>
-                        {isLoading ? 'Cadastrando...' : 'Cadastrar'}
+                    <button type="submit" disabled={isLoading} style={{ marginTop: "8px" }}>
+                        {isLoading ? "Cadastrando..." : "Cadastrar"}
                     </button>
                 </form>
-                
-                <p style={{ textAlign: 'center', marginTop: '24px', fontSize: '14px', color: 'var(--text-secondary)' }}>
-                    Já tem uma conta? <Link to="/login" style={{ color: 'var(--primary-color)', textDecoration: 'none', fontWeight: '500' }}>Faça Login</Link>
+
+                <p className="auth-footer">
+                    Já tem uma conta? <Link to="/login">Faça Login</Link>
                 </p>
             </div>
         </div>
