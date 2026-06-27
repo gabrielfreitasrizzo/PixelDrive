@@ -2,8 +2,11 @@ import { useState, type SubmitEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { cadastro } from "../services/auth";
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export function Cadastro() {
-    const [username, setUsername] = useState("");
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
@@ -15,17 +18,37 @@ export function Cadastro() {
         e.preventDefault();
         setError("");
         
-        if (!username || !password) {
-            setError("Por favor, preencha todos os campos.");
+        if (!firstName.trim()) {
+            setError("O campo Nome é obrigatório.");
+            return;
+        }
+        if (!email.trim()) {
+            setError("O campo E-mail é obrigatório.");
+            return;
+        }
+        if (!EMAIL_REGEX.test(email.trim())) {
+            setError("Por favor, insira um e-mail válido.");
+            return;
+        }
+        if (!password.trim()) {
+            setError("O campo Senha é obrigatório.");
             return;
         }
         setIsLoading(true);
         
         try {
-            await cadastro({ username, email, password });
-            navigate("/login");
-        } catch (err) {
-            setError("Falha no cadastro. Tente novamente.");
+            await cadastro({ 
+                first_name: firstName.trim(), 
+                last_name: lastName.trim(), 
+                email: email.trim(), 
+                password 
+            });
+            navigate("/login", {
+                state: { message: "Cadastro realizado com sucesso! Faça login para continuar." }
+            });
+        } catch (err: any) {
+            const msg = err.response?.data?.email?.[0];
+            setError(msg || "Falha no cadastro. Tente novamente.");
         } finally {
             setIsLoading(false);
         }
@@ -45,14 +68,22 @@ export function Cadastro() {
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     <input 
                         type="text" 
-                        placeholder="Username" 
-                        value={username} 
-                        onChange={(e) => setUsername(e.target.value)} 
+                        placeholder="Nome" 
+                        value={firstName} 
+                        onChange={(e) => setFirstName(e.target.value)} 
                         disabled={isLoading}
                         style={{ padding: '12px', borderRadius: 'var(--border-radius)', border: '1px solid var(--border-color)', outline: 'none' }}
                     />
                     <input 
-                        type="email" 
+                        type="text" 
+                        placeholder="Sobrenome (opcional)" 
+                        value={lastName} 
+                        onChange={(e) => setLastName(e.target.value)} 
+                        disabled={isLoading}
+                        style={{ padding: '12px', borderRadius: 'var(--border-radius)', border: '1px solid var(--border-color)', outline: 'none' }}
+                    />
+                    <input 
+                        type="text" 
                         placeholder="E-mail" 
                         value={email} 
                         onChange={(e) => setEmail(e.target.value)} 

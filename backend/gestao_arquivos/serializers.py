@@ -6,13 +6,23 @@ from .models import Arquivo
 class RegistroSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password']
-        extra_kwargs = {'password': {'write_only': True}}
+        fields = ['id', 'first_name', 'last_name', 'email', 'password']
+        extra_kwargs = {
+            'password': {'write_only': True},
+            'last_name': {'required': False, 'allow_blank': True},
+        }
+
+    def validate_email(self, value):
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError("Este e-mail já está cadastrado.")
+        return value
 
     def create(self, validated_data):
         user = User.objects.create_user(
-            username=validated_data['username'],
+            username=validated_data['email'],
             email=validated_data['email'],
+            first_name=validated_data['first_name'],
+            last_name=validated_data.get('last_name', ''),
             password=validated_data['password']
         )
         return user

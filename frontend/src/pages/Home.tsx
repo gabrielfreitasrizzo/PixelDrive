@@ -25,6 +25,7 @@ export function Home() {
     const [arquivoSelecionado, setArquivoSelecionado] = useState<File | null>(null);
     const [uploadProgress, setUploadProgress] = useState<number | null>(null);
     const [uploadError, setUploadError] = useState("");
+    const [successMessage, setSuccessMessage] = useState("");
 
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [arquivoParaDeletar, setArquivoParaDeletar] = useState<number | null>(null);
@@ -85,6 +86,8 @@ export function Home() {
             if (fileInput) fileInput.value = "";
             
             await carregarArquivos();
+            setSuccessMessage("Arquivo enviado com sucesso!");
+            setTimeout(() => setSuccessMessage(""), 4000);
         } catch (err) {
             setUploadError("Falha no upload. Tente novamente.");
         } finally {
@@ -116,6 +119,8 @@ export function Home() {
         try {
             await deletarArquivo(arquivoParaDeletar);
             await carregarArquivos();
+            setSuccessMessage("Arquivo deletado com sucesso!");
+            setTimeout(() => setSuccessMessage(""), 4000);
         } catch (err) {
             setError("Falha ao deletar o arquivo.");
         } finally {
@@ -176,6 +181,11 @@ export function Home() {
                 {uploadError && (
                     <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#FEE2E2', color: '#991B1B', borderRadius: 'var(--border-radius)', border: '1px solid #F87171', fontSize: '14px' }}>
                         {uploadError}
+                    </div>
+                )}
+                {successMessage && (
+                    <div style={{ margin: '15px 0', padding: '10px', backgroundColor: '#D1FAE5', color: '#065F46', borderRadius: 'var(--border-radius)', border: '1px solid #34D399', fontSize: '14px' }}>
+                        {successMessage}
                     </div>
                 )}
             </div>
