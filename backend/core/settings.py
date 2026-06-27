@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'django_cleanup.apps.CleanupConfig',
     'storages',
+    'drf_spectacular',
 ]
 
 MIDDLEWARE = [
@@ -135,6 +136,13 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'PixelDrive API',
+    'DESCRIPTION': 'API para gerenciamento de arquivos do PixelDrive.',
+    'VERSION': '1.0.0',
 }
 
 AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
