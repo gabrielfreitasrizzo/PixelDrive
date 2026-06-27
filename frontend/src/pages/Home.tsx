@@ -122,16 +122,6 @@ export function Home() {
             closeDeleteModal();
         }
     }   
-
-    async function handleDelete(id: number) {
-        if (window.confirm("Tem certeza que deseja deletar este arquivo?"))
-            try {
-                await deletarArquivo(id);
-                await carregarArquivos();
-            } catch (err) {
-                setError("Falha ao deletar o arquivo.");
-            }
-    }
             
     if (isLoading) return <p>Carregando arquivos...</p>;
 
@@ -213,12 +203,10 @@ export function Home() {
                     </thead>
                     <tbody>
                         {arquivos.map((arq) => (
-                            <tr key={arq.id} style={{ 
+                            <tr key={arq.id} className="table-row" style={{ 
                                 borderBottom: '1px solid var(--border-color)',
                                 transition: 'background-color 0.2s'
-                            }}
-                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F9FAFB'}
-                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fff'}
+                            }}     
                             >
                                 <td style={{ padding: '15px', fontWeight: '500' }}>{arq.nome}</td>
                                 <td style={{ padding: '15px', color: 'var(--text-secondary)' }}>{formatarTamanho(arq.tamanho)}</td>
@@ -227,7 +215,8 @@ export function Home() {
                                     <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
                                         <button 
                                             onClick={() => handleDownload(arq.id, arq.nome)}
-                                        style={{ 
+                                            aria-label={`Baixar o arquivo ${arq.nome}`}
+                                            style={{ 
                                             background: 'transparent',
                                             color: '#4d83f9',
                                             border: '1px solid #4d83f9', 
@@ -242,6 +231,7 @@ export function Home() {
                                         </button>
                                         <button 
                                             onClick={() => openDeleteModal(arq.id)} 
+                                            aria-label={`Deletar o arquivo ${arq.nome}`}
                                             style={{ 
                                             background: 'var(--danger)',
                                             color: 'white', 
@@ -291,7 +281,7 @@ export function Home() {
                                 <button 
                                     onClick={closeDeleteModal}
                                     style={{ 
-                                        background: '#E5E7EB', // Fundo cinza
+                                        background: '#E5E7EB',
                                         color: 'var(--text-primary)',
                                         border: 'none'
                                     }}
@@ -301,7 +291,7 @@ export function Home() {
                                 <button 
                                     onClick={confirmDelete}
                                     style={{ 
-                                        background: 'var(--danger)', // Mantemos vermelho aqui, sem gradiente
+                                        background: 'var(--danger)',
                                         color: 'white',
                                         border: 'none'
                                     }}
