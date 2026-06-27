@@ -1,6 +1,7 @@
 import { useEffect, useState, type ChangeEvent, type SubmitEvent } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { listarArquivos, fazerUpload, fazerDownload, deletarArquivo, type Arquivo } from "../services/arquivos";
+import { FiDownload, FiTrash2 } from "react-icons/fi";
 
 function formatarTamanho(bytes: number) {
     if (bytes === 0) return "0 Bytes";
@@ -12,7 +13,7 @@ function formatarTamanho(bytes: number) {
 
 function formatarData(dataIso: string) {
     const data = new Date(dataIso);
-    return data.toLocaleDateString();
+    return data.toLocaleDateString("pt-BR");
 }
 
 export function Home() {
@@ -24,6 +25,9 @@ export function Home() {
     const [arquivoSelecionado, setArquivoSelecionado] = useState<File | null>(null);
     const [uploadProgress, setUploadProgress] = useState<number | null>(null);
     const [uploadError, setUploadError] = useState("");
+
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [arquivoParaDeletar, setArquivoParaDeletar] = useState<number | null>(null);
 
     useEffect(() => {
         carregarArquivos();
@@ -96,6 +100,29 @@ export function Home() {
         }
     }
 
+    function openDeleteModal(id: number) {
+        setArquivoParaDeletar(id);
+        setIsDeleteModalOpen(true);
+    }
+
+    function closeDeleteModal() {
+        setIsDeleteModalOpen(false);
+        setArquivoParaDeletar(null);
+    }
+
+    async function confirmDelete() {
+        if (arquivoParaDeletar === null) return;
+        
+        try {
+            await deletarArquivo(arquivoParaDeletar);
+            await carregarArquivos();
+        } catch (err) {
+            setError("Falha ao deletar o arquivo.");
+        } finally {
+            closeDeleteModal();
+        }
+    }   
+
     async function handleDelete(id: number) {
         if (window.confirm("Tem certeza que deseja deletar este arquivo?"))
             try {
@@ -117,26 +144,50 @@ export function Home() {
 
             <div style={{ margin: '20px 0', padding: '15px', border: '1px solid #ccc', borderRadius: '5px' }}>
                 <h3>Novo Upload</h3>
-                <form onSubmit={handleUpload} style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                    <input 
-                        id="fileInput"
-                        type="file" 
-                        onChange={handleFileChange}
-                        disabled={uploadProgress !== null}
-                    />
-                    <button type="submit" disabled={!arquivoSelecionado || uploadProgress !== null}>
-                        Enviar
+                <form onSubmit={handleUpload} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                    <label style={{
+                        border: '2px dashed var(--border-color)',
+                        borderRadius: 'var(--border-radius)',
+                        padding: '30px',
+                        textAlign: 'center',
+                        cursor: 'pointer',
+                        backgroundColor: '#fff',
+                        transition: 'border-color 0.2s'
+                    }}>
+                        <span style={{ color: 'var(--text-secondary)' }}>
+                            {arquivoSelecionado ? arquivoSelecionado.name : 'Clique para selecionar um arquivo'}
+                        </span>
+                        <input 
+                            id="fileInput"
+                            type="file" 
+                            onChange={handleFileChange}
+                            disabled={uploadProgress !== null}
+                            style={{ display: 'none' }}
+                        />
+                    </label>
+                    
+                    <button type="submit" disabled={!arquivoSelecionado || uploadProgress !== null} style={{ width: '100%' }}>
+                        Enviar Arquivo
                     </button>
                 </form>
 
                 {uploadProgress !== null && (
-                    <div style={{ marginTop: '10px' }}>
-                        <progress value={uploadProgress} max="100" style={{ width: '100%' }}></progress>
-                        <span>{uploadProgress}%</span>
+                    <div style={{ marginTop: '15px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px', fontSize: '14px', color: 'var(--text-secondary)' }}>
+                            <span>Enviando...</span>
+                            <span>{uploadProgress}%</span>
+                        </div>
+                        <div style={{ width: '100%', height: '8px', backgroundColor: 'var(--border-color)', borderRadius: '4px', overflow: 'hidden' }}>
+                            <div style={{ width: `${uploadProgress}%`, height: '100%', backgroundColor: 'var(--primary-color)', transition: 'width 0.2s ease' }}></div>
+                        </div>
                     </div>
                 )}
                 
-                {uploadError && <p style={{ color: 'red', marginTop: '10px' }}>{uploadError}</p>}
+                {uploadError && (
+                    <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#FEE2E2', color: '#991B1B', borderRadius: 'var(--border-radius)', border: '1px solid #F87171', fontSize: '14px' }}>
+                        {uploadError}
+                    </div>
+                )}
             </div>
 
             {error && <p style={{ color: 'red' }}>{error}</p>}
@@ -144,32 +195,123 @@ export function Home() {
             {arquivos.length === 0 && !error ? (
                 <p>Nenhum arquivo encontrado.</p>
             ) : (
-                <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
-                    <thead>
-                        <tr style={{ borderBottom: '1px solid #ccc', textAlign: 'left' }}>
-                            <th style={{ padding: '10px 0' }}>Nome</th>
-                            <th>Tamanho</th>
-                            <th>Data de Upload</th>
-                            <th>Ações</th>
+                <table style={{ 
+                    width: '100%', 
+                    borderCollapse: 'collapse', 
+                    backgroundColor: '#fff',
+                    borderRadius: 'var(--border-radius)',
+                    overflow: 'hidden',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.15)' 
+                }}>
+                    <thead style={{ backgroundColor: '#F3F4F6', borderBottom: '1px solid var(--border-color)' }}>
+                        <tr style={{ textAlign: 'left' }}>
+                            <th style={{ padding: '15px' }}>Nome</th>
+                            <th style={{ padding: '15px' }}>Tamanho</th>
+                            <th style={{ padding: '15px', width: '120px' }}>Data de Upload</th>
+                            <th style={{ padding: '15px', textAlign: 'center' }}>Ações</th>
                         </tr>
                     </thead>
                     <tbody>
                         {arquivos.map((arq) => (
-                            <tr key={arq.id} style={{ borderBottom: '1px solid #eee' }}>
-                                <td style={{ padding: '10px 0' }}>{arq.nome}</td>
-                                <td>{formatarTamanho(arq.tamanho)}</td>
-                                <td>{formatarData(arq.data_upload)}</td>
-                                <td>
-                                    <button onClick={() => handleDownload(arq.id, arq.nome)}>Download</button>
-                                    <button onClick={() => handleDelete(arq.id)} style={{ marginLeft: '10px' }}>
-                                        Deletar
-                                    </button>
+                            <tr key={arq.id} style={{ 
+                                borderBottom: '1px solid var(--border-color)',
+                                transition: 'background-color 0.2s'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F9FAFB'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fff'}
+                            >
+                                <td style={{ padding: '15px', fontWeight: '500' }}>{arq.nome}</td>
+                                <td style={{ padding: '15px', color: 'var(--text-secondary)' }}>{formatarTamanho(arq.tamanho)}</td>
+                                <td style={{ padding: '15px', color: 'var(--text-secondary)' }}>{formatarData(arq.data_upload)}</td>
+                                <td style={{ padding: '15px', textAlign: 'center' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
+                                        <button 
+                                            onClick={() => handleDownload(arq.id, arq.nome)}
+                                        style={{ 
+                                            background: 'transparent',
+                                            color: '#4d83f9',
+                                            border: '1px solid #4d83f9', 
+                                            marginRight: '10px', 
+                                            padding: '8px 12px',
+                                            display: 'inline-flex', 
+                                            alignItems: 'center', 
+                                            justifyContent: 'center' 
+                                            }} 
+                                        >
+                                            <FiDownload />
+                                        </button>
+                                        <button 
+                                            onClick={() => openDeleteModal(arq.id)} 
+                                            style={{ 
+                                            background: 'var(--danger)',
+                                            color: 'white', 
+                                            border: 'none',
+                                            padding: '8px 12px',
+                                            display: 'inline-flex', 
+                                            alignItems: 'center', 
+                                            justifyContent: 'center' 
+                                            }}
+                                        >
+                                            <FiTrash2 />
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
             )}
-        </div>
+            {isDeleteModalOpen && (
+                <div style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        width: '100vw',
+                        height: '100vh',
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        zIndex: 2000 // Fica acima do cabeçalho
+                    }}>
+                        <div style={{
+                            backgroundColor: '#fff',
+                            padding: '24px',
+                            borderRadius: 'var(--border-radius)',
+                            maxWidth: '400px',
+                            width: '90%',
+                            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+                        }}>
+                            <h3 style={{ marginTop: 0, color: 'var(--text-primary)' }}>Confirmar exclusão</h3>
+                            <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>
+                                Tem certeza que deseja excluir este arquivo? Esta ação não poderá ser desfeita.
+                            </p>
+                            
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                                <button 
+                                    onClick={closeDeleteModal}
+                                    style={{ 
+                                        background: '#E5E7EB', // Fundo cinza
+                                        color: 'var(--text-primary)',
+                                        border: 'none'
+                                    }}
+                                >
+                                    Cancelar
+                                </button>
+                                <button 
+                                    onClick={confirmDelete}
+                                    style={{ 
+                                        background: 'var(--danger)', // Mantemos vermelho aqui, sem gradiente
+                                        color: 'white',
+                                        border: 'none'
+                                    }}
+                                    >
+                                    Sim, excluir
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
     );
 }
