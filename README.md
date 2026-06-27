@@ -4,6 +4,15 @@ Aplicação web de gerenciamento de arquivos, desenvolvida como teste técnico p
 
 Permite que usuários autenticados façam upload, listem, baixem e excluam seus próprios arquivos, com isolamento total entre contas.
 
+## Acesso em produção
+
+- App: [https://pixel-drive.vercel.app/](https://pixel-drive.vercel.app/)
+- API: [https://pixeldrive.onrender.com/admin/](https://pixeldrive.onrender.com/admin/)
+
+> **Nota sobre o primeiro acesso:** o backend está hospedado no tier gratuito do Render, que hiberna o serviço após um período de inatividade. Por isso, a primeira requisição após um tempo sem uso pode levar de 30 a 60 segundos para responder, enquanto o serviço é "acordado". Requisições seguintes voltam a ser instantâneas.
+>
+> Para acessar o admin do Django em produção ([https://pixeldrive.onrender.com/admin/](https://pixeldrive.onrender.com/admin/)), utilize o superusuário criado automaticamente pela própria aplicação na inicialização (ver seção [Decisões técnicas](#decisões-técnicas) — criação automática de superusuário).
+
 ## Stack
 
 - **Frontend:** React + TypeScript + Vite, React Router, Axios
@@ -61,7 +70,7 @@ PixelDrive/
 ├── frontend/               → React + TypeScript (Vite)
 │   └── src/
 │       ├── pages/          → telas (Login, Cadastro, Home)
-│       ├── components/     → componentes reutilizáveis (Header, ProtectedRoute, Modal,AlertBanner, UploadForm, ArquivosTable)
+│       ├── components/     → componentes reutilizáveis (Header, ProtectedRoute, Modal, AlertBanner, UploadForm, ArquivosTable)
 │       ├── contexts/       → contexto de autenticação
 │       └── services/       → comunicação com a API (auth, arquivos)
 └── docker-compose.yml      → orquestração dos serviços (backend, frontend, banco)
@@ -75,13 +84,13 @@ A comunicação entre frontend e backend é feita via API REST (JSON), com auten
 
 - **Download via streaming:** o endpoint de download (`GET /api/arquivos/{id}/download/`) usa `FileResponse`, que faz streaming do arquivo em chunks, em vez de carregá-lo inteiro na memória do servidor.
 
-- **Storage local ou S3 (configuração automática):** o backend decide qual storage usar com base na presença das variáveis de ambiente `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` e `AWS_STORAGE_BUCKET_NAME`. Se todas estiverem definidas, o S3 é usado; caso contrário, o sistema usa o filesystem local, sem nenhuma mudança de código necessária — apenas o `settings.py` decide isso dinamicamente. Essa decisão veio da necessidade real de deploy (ver seção [Deploy](#deploy)), onde plataformas como o Render não oferecem disco persistente, mas foi desenhada para não exigir credenciais AWS para rodar localmente via Docker.
+- **Storage local ou S3 (configuração automática):** o backend decide qual storage usar com base na presença das variáveis de ambiente `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` e `AWS_STORAGE_BUCKET_NAME`. Se todas estiverem definidas, o S3 é usado; caso contrário, o sistema usa o filesystem local, sem nenhuma mudança de código necessária — apenas o `settings.py` decide isso dinamicamente. Essa decisão veio da necessidade real de deploy, onde plataformas como o Render não oferecem disco persistente, mas foi desenhada para não exigir credenciais AWS para rodar localmente via Docker.
 
 - **Estáticos do admin via WhiteNoise:** como o backend roda com `gunicorn` (servidor de produção) em vez do `runserver` de desenvolvimento, os arquivos estáticos do Django Admin não são servidos automaticamente. Optei pelo `whitenoise` em vez de configurar um servidor separado (nginx) só para isso, por ser mais simples de manter dentro de um único container.
 
 - **Login por e-mail, sem alterar o modelo de usuário:** o edital pede autenticação por e-mail e senha, mas optei por manter o modelo `User` padrão do Django em vez de criar um modelo customizado (o que exigiria uma migração mais invasiva). A solução adotada foi sincronizar `username` e `email` no momento do cadastro — o usuário sempre informa apenas o e-mail, que é salvo automaticamente também como `username`. Isso aproveita a constraint de unicidade já existente em `username` para garantir que e-mails não se repitam, sem precisar de validação redundante.
 
-- **Criação automática de superusuário no Docker:** o `Dockerfile` do backend roda `createsuperuser --noinput` na inicialização, usando variáveis de ambiente (`DJANGO_SUPERUSER_*`). Isso evita que quem for avaliar o projeto precise executar um comando manual extra dentro do container só para acessar o admin.
+- **Criação automática de superusuário no Docker:** o `Dockerfile` do backend roda `createsuperuser --noinput` na inicialização, usando variáveis de ambiente (`DJANGO_SUPERUSER_*`). Isso evita que quem for avaliar o projeto precise executar um comando manual extra dentro do container só para acessar o admin — vale tanto localmente quanto no deploy em produção.
 
 - **Validação de upload duplicada (frontend e backend):** tipo e tamanho do arquivo são validados tanto no frontend (feedback imediato ao usuário, sem esperar uma chamada à API) quanto no backend (porque a validação no cliente nunca deve ser a única linha de defesa).
 
@@ -109,15 +118,19 @@ Nenhuma alteração de código é necessária para alternar entre os dois — ap
 - [x] Isolamento de acesso entre usuários
 - [x] Armazenamento local ou S3 (bônus)
 - [x] Execução completa via Docker Compose, com banco de dados persistido em volume
-- [x] Deploy em produção integrando Vercerl + Render + Supabase + AWS S3
+- [x] Deploy em produção integrando Vercel + Render + Supabase + AWS S3
 
 ## Funcionalidades não implementadas
 
-- [ ] **Upload com Streaming**
-- [ ] **Links de download com expiração** 
-- [ ] **Preview de imagens** 
-- [ ] **Versionamento de arquivos** 
-- [ ] **Cache** 
+- [ ] **Upload com streaming** — entre os dois sentidos de streaming possíveis (upload e download), priorizei o download via `FileResponse`, por ser o caso com maior benefício prático: evita que o servidor carregue arquivos grandes inteiros na memória ao serem baixados por múltiplos usuários simultaneamente. O upload, por ser uma operação pontual e de tamanho limitado (máx. 10MB pelo próprio requisito do teste), não apresenta o mesmo risco de consumo de memória, o que tornou o streaming nesse sentido uma prioridade mais baixa frente às demais funcionalidades.
+
+- [ ] **Links de download com expiração** — o controle de acesso ao download já é resolvido pela autenticação JWT, validada a cada requisição e combinada ao isolamento por usuário no backend. Implementar URLs assinadas com expiração agregaria uma camada adicional de segurança (útil sobretudo para compartilhamento de links fora da aplicação), mas não corrige uma lacuna de segurança existente hoje — por isso priorizei consolidar bem o fluxo de autenticação já implementado em vez de adicionar essa camada extra.
+
+- [ ] **Preview de imagens** — optei por concentrar o tempo disponível em garantir a robustez do fluxo principal (upload, storage híbrido local/S3, deploy completo) e na qualidade da documentação técnica, em vez de adicionar uma funcionalidade de UI que não impacta a integridade ou segurança do sistema.
+
+- [ ] **Versionamento de arquivos** — avaliei essa funcionalidade, mas decidi não implementá-la: ela exigiria uma modificação estrutural no modelo de dados (suportar múltiplas versões por arquivo lógico, com histórico e possivelmente regras de retenção), o que mudaria significativamente o escopo de modelagem do projeto. Entendi que essa complexidade adicional não se justificava frente às demais prioridades dentro do tempo disponível.
+
+- [ ] **Cache** — o volume de dados e o padrão de acesso de um sistema de gerenciamento de arquivos pessoal (poucos arquivos por usuário, baixa frequência de releitura da mesma listagem) não demonstrou, durante o desenvolvimento, um ganho de performance que justificasse a complexidade adicional de uma camada de cache nesta fase do projeto.
 
 ## Uso de IA
 
